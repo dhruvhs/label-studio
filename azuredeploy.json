@@ -56,10 +56,11 @@
   },
   "resources": [
     {
-      "apiVersion": "2018-02-01",
+      "apiVersion": "2018-11-01",
       "name": "[parameters('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[parameters('location')]",
+      "kind": "linux",
       "tags": {
         "displayName": "HostingPlan"
       },
@@ -68,11 +69,13 @@
         "capacity": "[parameters('skuCapacity')]"
       },
       "properties": {
-        "name": "[parameters('hostingPlanName')]"
+        "name": "[parameters('hostingPlanName')]",
+        "reserved": true,
+        "zoneRedundant": false
       }
     },
     {
-      "apiVersion": "2018-02-01",
+      "apiVersion": "2018-11-01",
       "name": "[parameters('appName')]",
       "type": "Microsoft.Web/sites",
       "location": "[parameters('location')]",
@@ -85,21 +88,47 @@
       ],
       "properties": {
         "name": "[parameters('appName')]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]"
-      },
-      "resources": [
-        {
-          "apiVersion": "2018-02-01",
-          "name": "web",
-          "type": "config",
-          "dependsOn": [
-            "[concat('Microsoft.Web/sites/', parameters('appName'))]"
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "DOCKER_REGISTRY_SERVER_URL",
+              "value": "https://index.docker.io"
+            },
+            {
+              "name": "DOCKER_REGISTRY_SERVER_USERNAME",
+              "value": ""
+            },
+            {
+              "name": "DOCKER_REGISTRY_SERVER_PASSWORD",
+              "value": null
+            },
+            {
+              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+              "value": "false"
+            },
+            {
+              "name": "DISABLE_SIGNUP_WITHOUT_LINK",
+              "value": "0"
+            },
+            {
+              "name": "LABEL_STUDIO_ONE_CLICK_DEPLOY",
+              "value": "1"
+            },
+            {
+              "name": "LABEL_STUDIO_PASSWORD",
+              "value": "password"
+            },
+            {
+              "name": "LABEL_STUDIO_USERNAME",
+              "value": "user"
+            }
           ],
-          "properties": {
-            "pythonVersion": "3.7"
-          }
-        }
-      ]
+          "linuxFxVersion": "DOCKER|heartexlabs/label-studio:latest",
+          "appCommandLine": "label-studio --username user"
+        },
+        "clientAffinityEnabled": false
+      }
     }
   ]
 }
